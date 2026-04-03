@@ -75,9 +75,7 @@ class TaskFlow(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title(f"{CONFIG['app_name']} • Professional Team Workspace")
-        self.geometry("1520x940")
-        self.attributes("-fullscreen", True)  # Make fullscreen
-        self.bind("<Escape>", lambda e: self.attributes("-fullscreen", False))  # Exit fullscreen with Escape
+        self.geometry("1920x1080")
         self.minsize(1350, 800)
         self.configure(fg_color="#0A0F1C")
 
@@ -181,11 +179,19 @@ class TaskFlow(ctk.CTk):
         sidebar = ctk.CTkFrame(self, width=280, corner_radius=0, fg_color="#111827")
         sidebar.pack(side="left", fill="y")
 
-        # Header
+        # Header with minimize button
         header = ctk.CTkFrame(sidebar, fg_color="transparent")
         header.pack(pady=32, padx=28, fill="x")
-        ctk.CTkLabel(header, text=CONFIG["app_name"], font=ctk.CTkFont(size=34, weight="bold"),
-                     text_color=ACCENT_COLOR).pack(anchor="w")
+        
+        title_frame = ctk.CTkFrame(header, fg_color="transparent")
+        title_frame.pack(anchor="w", fill="x")
+        
+        ctk.CTkLabel(title_frame, text=CONFIG["app_name"], font=ctk.CTkFont(size=34, weight="bold"),
+                     text_color=ACCENT_COLOR).pack(anchor="w", side="left")
+        ctk.CTkButton(title_frame, text="_", width=40, height=40, font=ctk.CTkFont(size=20),
+                      fg_color="transparent", hover_color="#1F2937",
+                      command=self.minimize_window).pack(anchor="e", side="right", padx=(10,0))
+        
         ctk.CTkLabel(header, text="Team Workspace", font=ctk.CTkFont(size=13),
                      text_color="#94A3B8").pack(anchor="w", pady=(2,0))
 
@@ -256,6 +262,9 @@ class TaskFlow(ctk.CTk):
                 self.save_task(task)
                 break
 
+    def minimize_window(self):
+        self.iconify()
+
     def show_notification(self, title: str, message: str, color=ACCENT_COLOR):
         notif = ctk.CTkToplevel(self)
         notif.title(title)
@@ -274,9 +283,62 @@ class DashboardPage(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color="transparent")
         self.app = app
+        self.quick_timer_running = False
+        self.quick_timer_seconds = 0
 
         ctk.CTkLabel(self, text="Welcome back, Team", font=ctk.CTkFont(size=36, weight="bold")).pack(anchor="w")
         ctk.CTkLabel(self, text="Stay productive today", font=ctk.CTkFont(size=18), text_color="#94A3B8").pack(anchor="w", pady=(4,30))
+
+        # Clock and Timer Section
+        clock_timer_frame = ctk.CTkFrame(self, fg_color="transparent")
+        clock_timer_frame.pack(fill="x", pady=(0, 30))
+
+        # Clock Display
+        clock_box = ctk.CTkFrame(clock_timer_frame, fg_color="#1F2937", corner_radius=20, border_width=2, border_color="#334155")
+        clock_box.pack(side="left", fill="both", expand=True, padx=(0, 15))
+
+        ctk.CTkLabel(clock_box, text="🕐 Current Time", font=ctk.CTkFont(size=14, weight="bold"), text_color="#94A3B8").pack(pady=(20, 10), padx=30)
+        
+        self.clock_display = ctk.CTkLabel(clock_box, text="00:00:00", font=ctk.CTkFont(size=56, weight="bold"), text_color=ACCENT_COLOR)
+        self.clock_display.pack(pady=(0, 5), padx=30)
+        
+        self.date_display = ctk.CTkLabel(clock_box, text="", font=ctk.CTkFont(size=13), text_color="#CBD5E1")
+        self.date_display.pack(pady=(0, 20), padx=30)
+        
+        self.update_clock()
+
+        # Quick Timer
+        timer_box = ctk.CTkFrame(clock_timer_frame, fg_color="#1F2937", corner_radius=20, border_width=2, border_color="#334155")
+        timer_box.pack(side="right", fill="both", expand=True, padx=(15, 0))
+
+        ctk.CTkLabel(timer_box, text="⏱️ Quick Timer", font=ctk.CTkFont(size=14, weight="bold"), text_color="#94A3B8").pack(pady=(20, 10), padx=30)
+        
+        self.timer_display = ctk.CTkLabel(timer_box, text="00:00", font=ctk.CTkFont(size=56, weight="bold"), text_color=WARNING_COLOR)
+        self.timer_display.pack(pady=(0, 15), padx=30)
+
+        timer_controls = ctk.CTkFrame(timer_box, fg_color="transparent")
+        timer_controls.pack(pady=(0, 15), padx=20)
+
+        ctk.CTkButton(timer_controls, text="5 min", width=60, height=36, corner_radius=6, font=ctk.CTkFont(size=12),
+                      command=lambda: self.set_quick_timer(300)).pack(side="left", padx=3)
+        ctk.CTkButton(timer_controls, text="15 min", width=60, height=36, corner_radius=6, font=ctk.CTkFont(size=12),
+                      command=lambda: self.set_quick_timer(900)).pack(side="left", padx=3)
+        ctk.CTkButton(timer_controls, text="30 min", width=60, height=36, corner_radius=6, font=ctk.CTkFont(size=12),
+                      command=lambda: self.set_quick_timer(1800)).pack(side="left", padx=3)
+
+        timer_action_frame = ctk.CTkFrame(timer_box, fg_color="transparent")
+        timer_action_frame.pack(fill="x", padx=20, pady=(0, 20))
+
+        self.timer_start_btn = ctk.CTkButton(timer_action_frame, text="▶ Start", height=36, corner_radius=6, fg_color=SUCCESS_COLOR,
+                                             command=self.start_quick_timer)
+        self.timer_start_btn.pack(side="left", fill="x", expand=True, padx=3)
+
+        self.timer_pause_btn = ctk.CTkButton(timer_action_frame, text="⏸ Pause", height=36, corner_radius=6, 
+                                             command=self.pause_quick_timer)
+        self.timer_pause_btn.pack(side="left", fill="x", expand=True, padx=3)
+
+        ctk.CTkButton(timer_action_frame, text="⟳ Reset", height=36, corner_radius=6, fg_color=DANGER_COLOR,
+                      command=self.reset_quick_timer).pack(side="left", fill="x", expand=True, padx=3)
 
         # Stats
         frame = ctk.CTkFrame(self, fg_color="#1F2937", corner_radius=20)
@@ -296,76 +358,196 @@ class DashboardPage(ctk.CTkFrame):
             ctk.CTkLabel(col, text=str(value), font=ctk.CTkFont(size=48, weight="bold"), text_color=color).pack()
             ctk.CTkLabel(col, text=label, font=ctk.CTkFont(size=15), text_color="#94A3B8").pack()
 
+    def update_clock(self):
+        """Update clock display with current time and schedule next update"""
+        now = datetime.now()
+        self.clock_display.configure(text=now.strftime("%H:%M:%S"))
+        self.date_display.configure(text=now.strftime("%A, %B %d, %Y"))
+        self.after(1000, self.update_clock)
+
+    def set_quick_timer(self, seconds):
+        """Set the quick timer to X seconds"""
+        self.quick_timer_seconds = seconds
+        self.quick_timer_running = False
+        self.update_timer_display()
+
+    def update_timer_display(self):
+        """Update timer display"""
+        minutes = self.quick_timer_seconds // 60
+        seconds = self.quick_timer_seconds % 60
+        self.timer_display.configure(text=f"{minutes:02d}:{seconds:02d}")
+
+    def start_quick_timer(self):
+        """Start the quick timer countdown"""
+        if not self.quick_timer_running and self.quick_timer_seconds > 0:
+            self.quick_timer_running = True
+            threading.Thread(target=self.countdown_quick_timer, daemon=True).start()
+
+    def countdown_quick_timer(self):
+        """Countdown the quick timer"""
+        while self.quick_timer_seconds > 0 and self.quick_timer_running:
+            time.sleep(1)
+            self.quick_timer_seconds -= 1
+            self.after(0, self.update_timer_display)
+
+        if self.quick_timer_seconds <= 0 and self.quick_timer_running:
+            self.quick_timer_running = False
+            self.app.show_notification("Timer Complete", "Quick timer finished!", SUCCESS_COLOR)
+
+    def pause_quick_timer(self):
+        """Pause the quick timer"""
+        self.quick_timer_running = False
+
+    def reset_quick_timer(self):
+        """Reset the quick timer"""
+        self.quick_timer_running = False
+        self.quick_timer_seconds = 0
+        self.update_timer_display()
+
 
 class KanbanPage(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color="transparent")
         self.app = app
+        self.page_size = 70  # Default card size percentage
 
-        ctk.CTkLabel(self, text="Project Board", font=ctk.CTkFont(size=30, weight="bold")).pack(anchor="w", pady=(0,24))
+        ctk.CTkLabel(self, text="Project Board", font=ctk.CTkFont(size=30, weight="bold")).pack(anchor="w", pady=(0,20))
+
+        # Page Size Control Bar
+        size_control_frame = ctk.CTkFrame(self, fg_color="#1F2937", corner_radius=12, height=60)
+        size_control_frame.pack(fill="x", pady=(0,20))
+        
+        ctk.CTkLabel(size_control_frame, text="Card Size:", font=ctk.CTkFont(size=14, weight="bold")).pack(side="left", padx=20, pady=16)
+        
+        ctk.CTkButton(size_control_frame, text="−", width=45, height=40, corner_radius=8,
+                      font=ctk.CTkFont(size=18, weight="bold"),
+                      command=self.decrease_page_size).pack(side="left", padx=6)
+        
+        self.size_indicator = ctk.CTkLabel(size_control_frame, text="100%", 
+                                           font=ctk.CTkFont(size=16, weight="bold"),
+                                           text_color=ACCENT_COLOR, width=80)
+        self.size_indicator.pack(side="left", padx=10)
+        
+        # Size Progress Bar
+        self.size_bar = ctk.CTkProgressBar(size_control_frame, width=200, height=16, corner_radius=8)
+        self.size_bar.set(1.0)
+        self.size_bar.pack(side="left", padx=10)
+        
+        ctk.CTkButton(size_control_frame, text="+", width=45, height=40, corner_radius=8,
+                      font=ctk.CTkFont(size=18, weight="bold"), fg_color=SUCCESS_COLOR,
+                      command=self.increase_page_size).pack(side="left", padx=6)
 
         columns_frame = ctk.CTkFrame(self, fg_color="transparent")
         columns_frame.pack(fill="both", expand=True)
 
         for status in ["To Do", "In Progress", "Done"]:
-            col = ctk.CTkFrame(columns_frame, fg_color="#1F2937", corner_radius=20)
-            col.pack(side="left", fill="both", expand=True, padx=14)
-
-            ctk.CTkLabel(col, text=status, font=ctk.CTkFont(size=19, weight="bold")).pack(pady=20)
+            col_container = ctk.CTkFrame(columns_frame, fg_color="transparent")
+            col_container.pack(side="left", fill="both", expand=True, padx=12)
+            
+            # Header with status and task count
+            header_frame = ctk.CTkFrame(col_container, fg_color="transparent")
+            header_frame.pack(fill="x", pady=(0,16))
+            
+            self.status_labels = getattr(self, 'status_labels', {})
+            self.status_labels[status] = ctk.CTkLabel(header_frame, text=f"{status} (0)", 
+                                                       font=ctk.CTkFont(size=18, weight="bold"))
+            self.status_labels[status].pack(anchor="w")
+            
+            # Column background
+            col = ctk.CTkFrame(col_container, fg_color="#1F2937", corner_radius=20, border_width=2, border_color="#334155")
+            col.pack(fill="both", expand=True)
 
             scroll = ctk.CTkScrollableFrame(col, fg_color="transparent")
-            scroll.pack(fill="both", expand=True, padx=16, pady=(0,16))
+            scroll.pack(fill="both", expand=True, padx=16, pady=16)
             setattr(self, f"col_{status.lower().replace(' ', '_')}", scroll)
 
         self.refresh_kanban()
 
     def refresh_kanban(self):
+        status_counts = {"To Do": 0, "In Progress": 0, "Done": 0}
+        
         for status in ["To Do", "In Progress", "Done"]:
             scroll = getattr(self, f"col_{status.lower().replace(' ', '_')}")
             for widget in scroll.winfo_children():
                 widget.destroy()
+            status_counts[status] = 0
+
+        # Calculate scaled font size based on page_size
+        scale_factor = self.page_size / 100.0
+        title_font_size = int(16 * scale_factor)
+        detail_font_size = int(13 * scale_factor)
+        button_height = int(32 * scale_factor)
+        button_width = int(70 * scale_factor)
 
         for task in self.app.tasks:
+            status_counts[task.status] += 1
             card = ctk.CTkFrame(getattr(self, f"col_{task.status.lower().replace(' ', '_')}"),
-                                fg_color="#334155", corner_radius=16, border_width=1, border_color="#475569")
-            card.pack(fill="x", pady=10, padx=8)
+                                fg_color="#2D3748", corner_radius=14, border_width=2, border_color="#4A5568")
+            card.pack(fill="x", pady=int(12 * scale_factor), padx=4)
 
             # Priority bar
             ctk.CTkFrame(card, width=6, fg_color=task.get_priority_color()).pack(side="left", fill="y")
 
             inner = ctk.CTkFrame(card, fg_color="transparent")
-            inner.pack(fill="x", padx=18, pady=16)
+            inner.pack(fill="x", padx=int(18 * scale_factor), pady=int(16 * scale_factor))
 
-            ctk.CTkLabel(inner, text=task.title, font=ctk.CTkFont(size=16, weight="bold")).pack(anchor="w")
+            ctk.CTkLabel(inner, text=task.title, font=ctk.CTkFont(size=title_font_size, weight="bold")).pack(anchor="w")
             if task.due_date:
-                ctk.CTkLabel(inner, text=f"Due: {task.due_date[:10]}", font=ctk.CTkFont(size=13),
-                             text_color="#94A3B8").pack(anchor="w", pady=4)
+                ctk.CTkLabel(inner, text=f"Due: {task.due_date[:10]}", font=ctk.CTkFont(size=detail_font_size),
+                             text_color="#94A3B8").pack(anchor="w", pady=int(4 * scale_factor))
             if task.time_spent > 0:
                 hours = task.time_spent // 60
                 mins = task.time_spent % 60
                 time_str = f"{hours}h {mins}m" if hours > 0 else f"{mins}m"
-                ctk.CTkLabel(inner, text=f"Time: {time_str}", font=ctk.CTkFont(size=13),
-                             text_color="#F59E0B").pack(anchor="w", pady=2)
+                ctk.CTkLabel(inner, text=f"Time: {time_str}", font=ctk.CTkFont(size=detail_font_size),
+                             text_color="#F59E0B").pack(anchor="w", pady=int(2 * scale_factor))
 
             btn_frame = ctk.CTkFrame(inner, fg_color="transparent")
-            btn_frame.pack(fill="x", pady=(12,0))
-            ctk.CTkButton(btn_frame, text="Edit", width=80, height=34, corner_radius=8,
-                          command=lambda t=task: self.app.open_task_form(t)).pack(side="left")
+            btn_frame.pack(fill="x", pady=(int(14 * scale_factor),0))
+            
+            # Top row - Edit and Mark Done
+            top_btn_frame = ctk.CTkFrame(btn_frame, fg_color="transparent")
+            top_btn_frame.pack(fill="x", pady=(0, int(8 * scale_factor)))
+            
+            ctk.CTkButton(top_btn_frame, text="✏️ Edit", width=button_width, height=button_height, corner_radius=8,
+                          command=lambda t=task: self.app.open_task_form(t)).pack(side="left", padx=2)
             if task.status != "Done":
-                ctk.CTkButton(btn_frame, text="Mark Done", width=100, height=34, corner_radius=8, fg_color=SUCCESS_COLOR,
-                              command=lambda t=task: self.mark_done(t)).pack(side="left", padx=12)
-            ctk.CTkButton(btn_frame, text="Delete", width=80, height=34, corner_radius=8, fg_color=DANGER_COLOR,
-                          command=lambda tid=task.id: self.app.delete_task(tid)).pack(side="left", padx=12)
+                ctk.CTkButton(top_btn_frame, text="✓ Done", width=int(80 * scale_factor), height=button_height, corner_radius=8, fg_color=SUCCESS_COLOR,
+                              command=lambda t=task: self.mark_done(t)).pack(side="left", padx=2)
+            ctk.CTkButton(top_btn_frame, text="🗑️ Delete", width=button_width, height=button_height, corner_radius=8, fg_color=DANGER_COLOR,
+                          command=lambda tid=task.id: self.app.delete_task(tid)).pack(side="left", padx=2)
 
-            # Timer button
-            timer_text = "Stop Timer" if task.id in self.app.running_timers else "Start Timer"
-            ctk.CTkButton(btn_frame, text=timer_text, width=100, height=34, corner_radius=8, fg_color=WARNING_COLOR,
-                          command=lambda t=task: self.toggle_timer(t)).pack(side="right")
+            # Bottom row - Timer button
+            timer_text = "⏸️ Stop" if task.id in self.app.running_timers else "▶️ Timer"
+            ctk.CTkButton(btn_frame, text=timer_text, width=int(200 * scale_factor), height=button_height, corner_radius=8, fg_color=WARNING_COLOR,
+                          command=lambda t=task: self.toggle_timer(t)).pack(fill="x")
 
     def mark_done(self, task):
         task.status = "Done"
         self.app.save_task(task)
         self.refresh_kanban()
+    
+    def update_status_counts(self):
+        for status in ["To Do", "In Progress", "Done"]:
+            count = sum(1 for t in self.app.tasks if t.status == status)
+            if hasattr(self, 'status_labels') and status in self.status_labels:
+                self.status_labels[status].configure(text=f"{status} ({count})")
+
+    def increase_page_size(self):
+        if self.page_size < 200:
+            self.page_size += 20
+            self.update_size_display()
+            self.refresh_kanban()
+
+    def decrease_page_size(self):
+        if self.page_size > 60:
+            self.page_size -= 20
+            self.update_size_display()
+            self.refresh_kanban()
+
+    def update_size_display(self):
+        self.size_indicator.configure(text=f"{self.page_size}%")
+        self.size_bar.set(self.page_size / 200.0)  # 200% is max, so divide by 200 for progress bar
 
     def toggle_timer(self, task):
         if task.id in self.app.running_timers:
@@ -526,6 +708,8 @@ class TaskForm(ctk.CTkToplevel):
         btn_frame.pack(fill="x", padx=40, pady=40)
         ctk.CTkButton(btn_frame, text="Save Task", height=56, font=ctk.CTkFont(size=17, weight="bold"),
                       fg_color=ACCENT_COLOR, command=self.save).pack(side="right", padx=(15,0))
+        ctk.CTkButton(btn_frame, text="Work Done", height=56, font=ctk.CTkFont(size=17, weight="bold"),
+                      fg_color=SUCCESS_COLOR, command=self.mark_done).pack(side="right", padx=(15,0))
         ctk.CTkButton(btn_frame, text="Cancel", height=56, font=ctk.CTkFont(size=17),
                       fg_color="#475569", command=self.destroy).pack(side="right")
 
@@ -537,6 +721,19 @@ class TaskForm(ctk.CTkToplevel):
         self.task.description = self.desc_entry.get("0.0", "end").strip()
         self.task.priority = self.priority_var.get()
         self.task.status = self.status_var.get()
+        self.task.due_date = self.due_entry.get().strip() or None
+
+        self.save_callback(self.task)
+        self.destroy()
+
+    def mark_done(self):
+        if not self.title_entry.get().strip():
+            messagebox.showerror("Error", "Task title is required.")
+            return
+        self.task.title = self.title_entry.get().strip()
+        self.task.description = self.desc_entry.get("0.0", "end").strip()
+        self.task.priority = self.priority_var.get()
+        self.task.status = "Done"
         self.task.due_date = self.due_entry.get().strip() or None
 
         self.save_callback(self.task)
