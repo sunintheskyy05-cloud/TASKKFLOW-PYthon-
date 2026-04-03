@@ -1,0 +1,37 @@
+-->> How to Use
+
+Dashboard: Get a quick overview of your tasks and statistics
+Kanban Board: Manage tasks visually by changing their status
+New Task: Create detailed tasks with subtasks and due dates
+Focus Timer: Use the Pomodoro timer to boost productivity (time is automatically logged)
+Analytics: Export your weekly progress as CSV or beautifully formatted PDF
+Settings: Switch between Dark/Light/System themes
+
+
+🛠️ Technologies Used
+
+GUI: CustomTkinter (Modern Tkinter)
+Database: SQLite3
+Data Handling: pandas
+Reporting: ReportLab (PDF generation)
+Logging: Python logging module
+Configuration: JSON-based config
+
+
+About the Developer
+Hi, I'm [Your Full Name]
+A passionate Python developer with a strong focus on building clean, user-friendly, and visually appealing desktop applications. I enjoy turning practical problems into elegant software solutions using modern Python tools and frameworks.
+This project was built to demonstrate my skills in:
+
+GUI development with modern libraries
+Database integration and data persistence
+Clean code architecture and professional UI/UX design
+Real-world application development
+
+I'm always looking for exciting opportunities to contribute to meaningful projects.
+
+📄 License & Copyright
+Copyright © 2026 [Adityya Mukherjee]
+All Rights Reserved.
+This project is for portfolio and demonstration purposes.
+You are welcome to use the code for learning and inspiration, but please do not redistribute or use it commercially without permission.

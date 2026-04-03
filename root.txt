@@ -1,0 +1,22 @@
+task_manager/
+├── main.py
+├── gui/
+│   ├── main_window.py
+│   ├── kanban_board.py
+│   ├── task_form.py
+│   ├── dashboard.py
+│   └── analytics.py
+├── database/
+│   ├── db_handler.py
+│   └── schema.sql
+├── models/
+│   └── task.py
+├── utils/
+│   ├── chart_generator.py
+│   └── helpers.py
+├── data/
+│   └── tasks.db
+├── assets/
+├── requirements.txt
+├── README.md
+└── .gitignore
