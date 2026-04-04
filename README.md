@@ -2,7 +2,7 @@ Welcome Developers,
 
 # TaskFlow - Professional Team Task & Productivity Manager
 
-![TaskFlow Banner](Capture.PNG)
+![TaskFlow Banner](https://via.placeholder.com/800x200/6366F1/FFFFFF?text=TaskFlow+-+Team+Productivity)
 
 A modern, beautiful, and fully functional desktop application built with **CustomTkinter** to help individuals and teams stay organized, focused, and productive.
 
@@ -39,7 +39,7 @@ A modern, beautiful, and fully functional desktop application built with **Custo
 
 ## 🖥️ Screenshots
 
-*(Add screenshots here after running the app – Dashboard, Kanban Board, Pomodoro Timer, Task Form)*
+![TaskFlow Screenshot](capture.png)
 
 ---
 
