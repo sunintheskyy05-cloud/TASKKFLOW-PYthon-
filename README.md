@@ -39,7 +39,7 @@ A modern, beautiful, and fully functional desktop application built with **Custo
 
 ## 🖥️ Screenshots
 
-![TaskFlow Screenshot](capture.png)
+![TaskFlow Screenshot](Capture.PNG)
 
 ---
 
